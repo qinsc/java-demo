@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import com.google.common.base.Strings;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @ComponentScan({ "com.websystique.springsecurity.configuration" })
 @PropertySource(value = { "classpath:application.properties" })
 public class HibernateConfiguration {
+    static final String MYSQL_URL = "MYSQL_URL";
+    static final String MYSQL_USERNAME = "MYSQL_USERNAME";
+    static final String MYSQL_PASSWORD = "MYSQL_PASSWORD";
 
     @Autowired
     private Environment environment;
@@ -41,7 +45,8 @@ public class HibernateConfiguration {
         dataSource.setUrl(environment.getRequiredProperty("jdbc.url"));
         dataSource.setUsername(environment.getRequiredProperty("jdbc.username"));
         dataSource.setPassword(environment.getRequiredProperty("jdbc.password"));
-        return dataSource;
+
+        return loadConfigrationFromEnv(dataSource);
     }
     
     private Properties hibernateProperties() {
@@ -59,6 +64,24 @@ public class HibernateConfiguration {
        HibernateTransactionManager txManager = new HibernateTransactionManager();
        txManager.setSessionFactory(s);
        return txManager;
+    }
+
+    private DataSource loadConfigrationFromEnv(DriverManagerDataSource dataSource) {
+        String url = System.getenv(MYSQL_URL);
+        if (!Strings.isNullOrEmpty(url)) {
+            dataSource.setUrl(url);
+        }
+
+        String userName = System.getenv(MYSQL_USERNAME);
+        if (!Strings.isNullOrEmpty(userName)) {
+            dataSource.setUsername(userName);
+        }
+
+        String password = System.getenv(MYSQL_PASSWORD);
+        if (!Strings.isNullOrEmpty(password)) {
+            dataSource.setPassword(password);
+        }
+        return dataSource;
     }
 }
 
